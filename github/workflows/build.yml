@@ -1,0 +1,49 @@
+name: Build SARI Video Downloader
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            libcurl4-openssl-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cmake --build build \
+            --config Release \
+            --parallel
+
+      - name: Test executable
+        run: |
+          ./build/sari-downloader --help || true
+
+      - name: Package
+        run: |
+          mkdir -p artifact
+          cp build/sari-downloader artifact/
+
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: sari-video-downloader-linux
+          path: artifact/sari-downloader
